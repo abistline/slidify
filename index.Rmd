@@ -1,0 +1,165 @@
+---
+title       : Maximizing Uniformity in Frequency Content between Traces
+subtitle    : One Step in the Analysis of Surface Waves
+author      : Austin L. Bistline
+job         : Developing Data Products
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+publish(user="abistline", repo="slidify")
+---
+
+## Background
+
+Surface waves can be very descriptive of the material they are passing through if the source of the waves is instantaneous.  An instantaneous impact creates a measurable spike in time, which infers infinite frequency content in the resulting wave.  If the impact is not instantaneous, there may not be enough frequency content to infer properties of the material through surface wave analysis.  Applying a bandpass filter can mitigate this effect by emphasizing uniformity in the frequency range, or power spectrum.  
+
+A Shiny App was created to apply a bandpass filter to two surface wave traces (near and far), and observe the resulting frequency content (power spectrum) of the traces.  Linear regression lines applied to the power spectrum indicate maximized uniformity when the slope of the line approaches zero.  When the sum of the slopes in two power spectrums is minimized, both spectrums are mutually ideal for infering properties about the material.
+
+The App is located here:
+
+https://abistline.shinyapps.io/Time-to-Frequency_Demo
+
+--- .class #id 
+
+## Raw Traces
+
+Traces measuring displacement in concrete as it is impacted with a 1-lb ballpeen hammer.  Blue is from a sensor positioned 1 foot from the hammer; red from a sensor positioned 3.5 feet from the hammer. 
+```{r, echo=F, message=F, evaluate=T}
+
+library(dplyr)
+
+# Load the raw data and constants
+textFile = "NE_4.txt"
+sampling_rate = 10^5
+n = 5
+index = 2048
+nearFirst = TRUE
+allData = read.csv(textFile, stringsAsFactors = FALSE, skip = 2, header = FALSE)
+  
+# Parse the data into 10 individual records.  
+if (nearFirst == TRUE) {
+  for (i in 1:n) {
+    assign(paste("nt", i, sep = ""), allData[((i-1)*index+i+1):((i)*index+i), ])
+    assign(paste("ft", i, sep = ""), allData[((n-1+i)*index+n+i+2):((n+i)*index+n+i+1), ])
+    
+  }
+} else {
+  for (i in 1:n) {
+    assign(paste("ft", i, sep = ""), allData[((i-1)*index+i+1):((i)*index+i), ])
+    assign(paste("nt", i, sep = ""), allData[((n-1+i)*index+n+i+2):((n+i)*index+n+i+1), ])
+  }
+}
+
+# Create a data frame with time and traces in separate columns
+library(dplyr)
+fdf = cbind(ft1, ft2[,2], ft3[,2], ft4[,2], ft5[,2]) 
+names(fdf) = c("time", "f1", "f2", "f3", "f4", "f5") 
+
+# Create one more column in the data frame with stacked traces while making "time" numeric
+f = mutate(fdf, time=as.numeric(time)*(10^-6), 
+         stack=(f1 + f2 + f3 + f4 + f5)/5)
+
+# Repeat the process for the "Near" traces
+ndf = cbind(nt1, nt2[,2], nt3[,2], nt4[,2], nt5[,2])
+names(ndf) = c("time", "n1", "n2", "n3", "n4", "n5")
+n = mutate(ndf, time=as.numeric(time)*10^-6, 
+           stack=(n1 + n2 + n3 + n4 + n5)/5)
+tpp = n$time[1]
+```
+
+```{r, fig.width=13, fig.height=4}
+plot(f$time, f$stack, type="l", col="red", xlab="Time (s)", ylab="Voltage (V)")
+lines(n$time, n$stack, type="l", col="blue", xlab="Time (s)", ylab="Voltage (V)")
+```
+
+--- .class #id
+
+## Extracting the Surface Wave from the Trace
+
+The surface wave makes up roughly 67% of the energy in the trace and is visible as the first large negative peak.  It can be extracted through windowing, or through applying a bandpass filter.  Windowing retains low frequencies that bias Surface Wave analysis.
+
+```{r, echo=F, message=F, evaluate=T}
+startnsw = match(0.00196, n$time)
+startfsw = match(0.00226, f$time)
+
+decayConstant = 20
+nExp = exp(-(1:(length(n$time) - startnsw + 1)) / decayConstant)
+fExp = exp(-(1:(length(f$time) - startfsw + 1)) / decayConstant)
+
+# Take the exponential vector and multiply it to stacked vector from the start indexes
+nsw = n$stack
+fsw = f$stack
+nsw[startnsw:length(nsw)] = nExp * n$stack[startnsw:nrow(n)]
+fsw[startfsw:length(fsw)] = fExp * f$stack[startfsw:nrow(f)]
+
+# The near surface wave trace is gained by a factor of 2
+nsw = nsw * 2
+```
+
+```{r, echo=F, message=F, evaluate=T}
+library(seewave)
+nbp = bwfilter(n$stack, f=10^5, n=1, from=15500, to=49999)
+fbp = bwfilter(f$stack, f=10^5, n=1, from=15500, to=49999)
+snsw = nsw[1:512]; sfsw=fsw[1:512]; snbp = nbp[1:512]; sfbp = fbp[1:512]
+sn = n[1:512, ]; sf = f[1:512, ]
+```
+
+```{r, fig.width=13, fig.height=4}
+par(mfcol=(c(1, 2)))
+plot(sf$time, sfsw, type="l", col="red", xlab="Time (s)", ylab="Voltage (V)", main="Windowed")
+lines(sn$time, snsw, type="l", col="blue")
+plot(sf$time, sfbp, type="l", col="red", xlab="Time (s)", ylab="Voltage (V)", main="Filtered")
+lines(sn$time, snbp, type="l", col="blue")
+```
+
+--- .class #id
+
+## Example Result
+
+The Surface Wave velocity can be extracted as a function of wavelength (pseudo depth).
+
+```{r, echo=F, message=F, evaluate=T}
+library(IRISSeismic)
+library(seewave)
+tsnbp <- ts(nbp,frequency=10^5)
+tsfbp <- ts(fbp,frequency=10^5)
+xbp <- ts.union(tsnbp,tsfbp)
+contentbp = crossSpectrum(xbp)
+
+ts1.sw <- ts(nsw,frequency=10^5)
+ts2.sw <- ts(fsw,frequency=10^5)
+x.sw <- ts.union(ts1.sw,ts2.sw)
+content.sw = crossSpectrum(x.sw)
+
+phasebp = data.frame(phase=-contentbp$phase, freq=contentbp$freq)
+phasesw = data.frame(phase=-content.sw$phase, freq=content.sw$freq)
+phaseAnglebp = unwrap(phasebp$phase)
+phaseAnglesw = unwrap(phasesw$phase)
+
+spacing = 2.5
+lambdabp = spacing * (2 * pi / (-phaseAnglebp[which(phasebp$freq > 3270)]))
+velocitybp = lambdabp * phasebp$freq[which(phasebp$freq > 3270)]
+
+lambdasw = spacing * (2 * pi / (-phaseAnglesw[which(phasesw$freq > 3270)]))
+velocitysw = lambdasw * phasesw$freq[which(phasesw$freq > 3270)]
+```
+
+```{r, echo=F, fig.width=13, fig.height=7}
+par(mfcol=c(2, 3))
+plot(content.sw$freq, content.sw$spec2, type="l", col="red", xlab="Frequency (Hz)", ylab="Amplitude")
+lines(content.sw$freq, content.sw$spec1, type="l", col="blue")
+
+plot(contentbp$freq, contentbp$spec2, type="l", col="red", xlab="Frequency (Hz)", ylab="Amplitude")
+lines(contentbp$freq, contentbp$spec1, type="l", col="blue")
+
+plot(content.sw$freq, -content.sw$phase, type="l", xlab="Frequency (Hz)", ylab="Phase (radians)")
+plot(contentbp$freq, -contentbp$phase, type="l", xlab="Frequency (Hz)", ylab="Phase (radians)")
+
+plot(lambdasw, velocitysw, type="l", xlab="Wavelength (ft)", ylab="Velocity (ft/sec)", ylim=c(0, 10000))
+plot(lambdabp, velocitybp, type="l", xlab="Wavelength (ft)", ylab="Velocity (ft/sec)", ylim=c(0, 10000))
+```
+
+

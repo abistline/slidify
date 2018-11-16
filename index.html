@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Maximizing Uniformity in Frequency Content between Traces</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Maximizing Uniformity in Frequency Content between Traces">
+  <meta name="author" content="Austin L. Bistline">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Maximizing Uniformity in Frequency Content between Traces</h1>
+    <h2>One Step in the Analysis of Surface Waves</h2>
+    <p>Austin L. Bistline<br/>Developing Data Products</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>Background</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Surface waves can be very descriptive of the material they are passing through if the source of the waves is instantaneous.  An instantaneous impact creates a measurable spike in time, which infers infinite frequency content in the resulting wave.  If the impact is not instantaneous, there may not be enough frequency content to infer properties of the material through surface wave analysis.  Applying a bandpass filter can mitigate this effect by emphasizing uniformity in the frequency range, or power spectrum.  </p>
+
+<p>A Shiny App was created to apply a bandpass filter to two surface wave traces (near and far), and observe the resulting frequency content (power spectrum) of the traces.  Linear regression lines applied to the power spectrum indicate maximized uniformity when the slope of the line approaches zero.  When the sum of the slopes in two power spectrums is minimized, both spectrums are mutually ideal for infering properties about the material.</p>
+
+<p>The App is located here:</p>
+
+<p><a href="https://abistline.shinyapps.io/Time-to-Frequency_Demo">https://abistline.shinyapps.io/Time-to-Frequency_Demo</a></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Raw Traces</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Traces measuring displacement in concrete as it is impacted with a 1-lb ballpeen hammer.  Blue is from a sensor positioned 1 foot from the hammer; red from a sensor positioned 3.5 feet from the hammer. </p>
+
+<pre><code class="r">plot(f$time, f$stack, type=&quot;l&quot;, col=&quot;red&quot;, xlab=&quot;Time (s)&quot;, ylab=&quot;Voltage (V)&quot;)
+lines(n$time, n$stack, type=&quot;l&quot;, col=&quot;blue&quot;, xlab=&quot;Time (s)&quot;, ylab=&quot;Voltage (V)&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-2-1.png" alt="plot of chunk unnamed-chunk-2"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Extracting the Surface Wave from the Trace</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The surface wave makes up roughly 67% of the energy in the trace and is visible as the first large negative peak.  It can be extracted through windowing, or through applying a bandpass filter.  Windowing retains low frequencies that bias Surface Wave analysis.</p>
+
+<pre><code class="r">par(mfcol=(c(1, 2)))
+plot(sf$time, sfsw, type=&quot;l&quot;, col=&quot;red&quot;, xlab=&quot;Time (s)&quot;, ylab=&quot;Voltage (V)&quot;, main=&quot;Windowed&quot;)
+lines(sn$time, snsw, type=&quot;l&quot;, col=&quot;blue&quot;)
+plot(sf$time, sfbp, type=&quot;l&quot;, col=&quot;red&quot;, xlab=&quot;Time (s)&quot;, ylab=&quot;Voltage (V)&quot;, main=&quot;Filtered&quot;)
+lines(sn$time, snbp, type=&quot;l&quot;, col=&quot;blue&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-5-1.png" alt="plot of chunk unnamed-chunk-5"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Example Result</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The Surface Wave velocity can be extracted as a function of wavelength (pseudo depth).</p>
+
+<p><img src="figure/unnamed-chunk-7-1.png" alt="plot of chunk unnamed-chunk-7"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='Background'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Raw Traces'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Extracting the Surface Wave from the Trace'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Example Result'>
+         4
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
