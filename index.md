@@ -9,14 +9,14 @@ hitheme     : tomorrow      #
 widgets     : []            # {mathjax, quiz, bootstrap}
 mode        : selfcontained # {standalone, draft}
 knit        : slidify::knit2slides
-publish(user="abistline", repo="slidify")
+
 ---
 
 ## Background
 
 Surface waves can be very descriptive of the material they are passing through if the source of the waves is instantaneous.  An instantaneous impact creates a measurable spike in time, which infers infinite frequency content in the resulting wave.  If the impact is not instantaneous, there may not be enough frequency content to infer properties of the material through surface wave analysis.  Applying a bandpass filter can mitigate this effect by emphasizing uniformity in the frequency range, or power spectrum.  
 
-A Shiny App was created to apply a bandpass filter to two surface wave traces (near and far), and observe the resulting frequency content (power spectrum) of the traces.  Linear regression lines applied to the power spectrum indicate maximized uniformity when the slope of the line approaches zero.  When the sum of the slopes in two power spectrums is minimized, both spectrums are mutually ideal for infering properties about the material.
+A Shiny App was created to apply a bandpass filter to two surface wave traces (near and far), and observe the resulting frequency content (power spectrum) of the traces.  Linear regression lines applied to the power spectrum indicate maximized uniformity when the slope of the line approaches zero.  When the sum of the slopes in two power spectrums is minimized, both spectrums are mutually ideal for infering properties about the material.  Adjust the regression lines by moving the "Frequency" slider in the SideBar Panel.
 
 The App is located here:
 
